@@ -4,7 +4,8 @@
 import tensorflow as tf
 from tensorflow import keras
 from functions.dataloader import dataloader
-
+import numpy as np
+import matplotlib.pyplot as plt
 class GMF:
 
     def __init__(self,num_users,num_items,latent_fetures = 8):
@@ -21,7 +22,7 @@ class GMF:
         item_latent = keras.layers.Flatten()(item_embedding)
 
         #concat with multiply
-        concat = keras.layers.Multiply([user_latent,item_latent])
+        concat = keras.layers.Multiply()([user_latent,item_latent])
 
         output = keras.layers.Dense(1,kernel_initializer=keras.initializers.lecun_uniform,
                                     )(concat)
@@ -30,7 +31,8 @@ class GMF:
                             outputs = [output])
 
         self.model.compile(optimizer=keras.optimizers.Adam(),
-                           loss=keras.losses.binary_crossentropy)
+                           loss=keras.losses.mean_squared_error,
+                           )
 
 
     def get_model(self):
@@ -39,11 +41,19 @@ class GMF:
 
 if __name__ =="__main__":
         loader = dataloader("/Users/koosup/PycharmProjects/NCF/dataset/movielens")
-        train_data = loader.train_data
-        test_data = loader.test_data
-        print(train_data.shape)
-        print(test_data.shape)
 
+        X_train,labels = loader.generate_trainset()
+        X_test,test_labels =loader.generate_testset()
+
+        model = GMF(loader.num_users,loader.num_movies).get_model()
+
+        history = model.fit([X_train[:,0],X_train[:,1]],labels,
+                  epochs=10,
+                  batch_size=32,
+                  validation_data=([X_test[:,0],X_test[:,1]],test_labels)
+                  )
+
+        plt.plot(history.history)
 
 
 
