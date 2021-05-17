@@ -10,7 +10,7 @@ class dataloader():
 
     def __init__(self,data_path):
         self.data_path = data_path
-        ratings_df = pd.read_csv(os.path.join(self.data_path, 'ratings.csv'), encoding='utf-8')
+        ratings_df = pd.read_csv(os.path.join(self.data_path), encoding='utf-8')
         self.train_df, self.test_df = train_test_split(ratings_df, test_size=0.2, random_state=42, shuffle=True)
         # user dataset
         self.users = self.train_df["userId"].unique()
@@ -38,16 +38,16 @@ class dataloader():
                                "movie": self.test_df["movieId"].map(self.movies_to_index)})
         y_test = self.test_df['rating'].astype(np.float32)
         return np.asarray(X_test),np.asarray(y_test)
-if __name__ == "__main__":
-    loader = dataloader("/Users/koosup/PycharmProjects/NCF/dataset/movielens")
-    train_x,train_y = loader.generate_trainset()
-    test_x,test_y = loader.generate_testset()
-    print(train_x)
-    print(train_y)
-    print(len(train_x))
-    print(test_x)
-    print(test_y)
-    print(len(test_x))
+# if __name__ == "__main__":
+#     loader = dataloader("/Users/koosup/PycharmProjects/NCF/dataset/movielens")
+#     train_x,train_y = loader.generate_trainset()
+#     test_x,test_y = loader.generate_testset()
+#     print(train_x)
+#     print(train_y)
+#     print(len(train_x))
+#     print(test_x)
+#     print(test_y)
+#     print(len(test_x))
 
 
 
