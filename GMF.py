@@ -3,19 +3,7 @@
 
 import tensorflow as tf
 from tensorflow import keras
-import argparse
-
-#args
-
-
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="GMF")
-    parser.add_argument('--path',default="dataset/",help="dataset path")
-    parser.add_argument('--dataset',default='movielens',help="dataset")
-
-
+from functions.dataloader import dataloader
 
 class GMF:
 
@@ -32,14 +20,29 @@ class GMF:
         user_latent = keras.layers.Flatten()(user_embedding)
         item_latent = keras.layers.Flatten()(item_embedding)
 
+        #concat with multiply
         concat = keras.layers.Multiply([user_latent,item_latent])
 
         output = keras.layers.Dense(1,kernel_initializer=keras.initializers.lecun_uniform,
                                     )(concat)
 
-        model = keras.Model(inputs = [user_input,item_input],
+        self.model = keras.Model(inputs = [user_input,item_input],
                             outputs = [output])
-    def 
+
+        self.model.compile(optimizer=keras.optimizers.Adam(),
+                           loss=keras.losses.binary_crossentropy)
+
+
+    def get_model(self):
+        model = self.model
+        return model
+
+if __name__ =="__main__":
+        loader = dataloader("/Users/koosup/PycharmProjects/NCF/dataset/movielens")
+        train_data = loader.train_data
+        test_data = loader.test_data
+        print(train_data.shape)
+        print(test_data.shape)
 
 
 
