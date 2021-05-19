@@ -15,13 +15,13 @@ def parse_args():
                         help='Input data path.')
     parser.add_argument('--dataset', nargs='?', default='ratings.csv',
                         help='Choose a dataset.')
-    parser.add_argument('--layers', nargs='?', default='[64,32,16,8]',
+    parser.add_argument('--layers', nargs='+', default=[64,32,16,8],
                         help='num of layers and nodes of each layer. embedding size is (2/1st layer) ')
     parser.add_argument('--epochs', type=int, default=10,
                         help='Number of epochs.')
     parser.add_argument('--batch_size', type=int, default=32,
                         help='Batch size.')
-    parser.add_argument('--regs', nargs='?', default='[0,0,0,0]',
+    parser.add_argument('--regs', nargs='+', default=[0,0,0,0],
                         help="Regularization for user and item embeddings.")
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate.')
@@ -35,19 +35,20 @@ def parse_args():
 
 class MLP:
 
-    def __init__(self,num_users,num_items,layers = [64,32,16,8] ,regs=[0,0,0,0]):
+    def __init__(self,num_users,num_items,layers = [64,32,16,8] ,regs= [0,0,0,0]):
         self.num_users = num_users
         self.num_items = num_items
-        self.layers = layers
+        self.layers = list(map(int,layers))
         self.num_layers = len(layers)
-        self.regs = regs
+        self.regs = list(map(float,regs))
         #inputs
         user_input = keras.layers.Input(shape=(1,),dtype = 'int32')
         item_input = keras.layers.Input(shape=(1,),dtype = 'int32')
 
         #embedding layer : embedding_size = layer[0]/2
-        user_embedding = keras.layers.Embedding(num_users,self.layers[0]/2,embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(user_input)
-        item_embedding = keras.layers.Embedding(num_items,self.layers[0]/2,embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(item_input)
+        user_embedding = keras.layers.Embedding(num_users,int(self.layers[0]/2),embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(user_input)
+        item_embedding = keras.layers.Embedding(num_items,int(self.layers[0]/2),embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(item_input)
+
         user_latent = keras.layers.Flatten()(user_embedding)
         item_latent = keras.layers.Flatten()(item_embedding)
 
@@ -123,6 +124,8 @@ if __name__ =="__main__":
 
         pd.DataFrame(history.history).plot(figsize= (8,5))
         plt.show()
-
-
+        test_sample = X_test[:10]
+        test_sample_label = test_labels[:10]
+        print(model.predict([test_sample[:,0],test_sample[:,1]]))
+        print(test_sample_label)
 
