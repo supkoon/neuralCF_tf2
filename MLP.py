@@ -10,7 +10,7 @@ import argparse
 
 #################### Arguments ####################
 def parse_args():
-    parser = argparse.ArgumentParser(description="GMF.")
+    parser = argparse.ArgumentParser(description="MLP.")
     parser.add_argument('--path', nargs='?', default='/dataset/',
                         help='Input data path.')
     parser.add_argument('--dataset', nargs='?', default='ratings.csv',
@@ -46,17 +46,18 @@ class MLP:
         item_input = keras.layers.Input(shape=(1,),dtype = 'int32')
 
         #embedding layer : embedding_size = layer[0]/2
-        user_embedding = keras.layers.Embedding(num_users,int(self.layers[0]/2),embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(user_input)
-        item_embedding = keras.layers.Embedding(num_items,int(self.layers[0]/2),embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(item_input)
+        user_embedding = keras.layers.Embedding(num_users,int(self.layers[0]/2),embeddings_regularizer=keras.regularizers.l2(self.regs[0]),
+                                                name = "user_embedding")(user_input)
+        item_embedding = keras.layers.Embedding(num_items,int(self.layers[0]/2),embeddings_regularizer=keras.regularizers.l2(self.regs[0]),
+                                                name = 'item_embedding')(item_input)
 
         user_latent = keras.layers.Flatten()(user_embedding)
         item_latent = keras.layers.Flatten()(item_embedding)
 
-        #concat with multiply : layer 0 , size : layer[0]
+        #concat  : layer 0 , size : layer[0]
         vector = keras.layers.concatenate([user_latent,item_latent])
 
         #hidden layers : 1 ~ num_layer
-
         for index in range(self.num_layers):
             layer = keras.layers.Dense(layers[index],kernel_regularizer=keras.regularizers.l2(self.regs[index]),
                                        activation = keras.activations.relu,
@@ -64,6 +65,7 @@ class MLP:
             vector =layer(vector)
 
         output = keras.layers.Dense(1,kernel_initializer=keras.initializers.lecun_uniform(),
+                                    name='output'
                                     )(vector)
 
         self.model = keras.Model(inputs = [user_input,item_input],
@@ -91,11 +93,11 @@ if __name__ =="__main__":
 
         #callbacks
         early_stop_cb = keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)
-        model_out_file = 'Pretrain/GMF_%s.h5' % (datetime.now().strftime('%Y-%m-%d-%h-%m-%s'))
+        model_out_file = 'Pretrain/MLP_%s.h5' % (datetime.now().strftime('%Y-%m-%d-%h-%m-%s'))
         model_check_cb = keras.callbacks.ModelCheckpoint(model_out_file, save_best_only=True)
 
         #model
-        model = MLP(loader.num_users,loader.num_movies,layers,regs).get_model()
+        model = MLP(loader.num_users,loader.num_items,layers,regs).get_model()
 
         if learner.lower() == "adagrad":
             model.compile(optimizer=keras.optimizers.Adagrad(lr=learning_rate), loss='mse')

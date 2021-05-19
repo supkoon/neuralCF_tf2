@@ -18,7 +18,7 @@ class dataloader():
         self.user_to_index = {user : idx for idx,user in enumerate(self.users)}
         # movie dataset
         self.movies = self.train_df["movieId"].unique()
-        self.num_movies = len(self.movies)
+        self.num_items = len(self.movies)
 
         self.movies_to_index = {movie : idx for idx, movie in enumerate(self.movies)}
 

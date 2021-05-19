@@ -21,7 +21,7 @@ def parse_args():
                         help='Batch size.')
     parser.add_argument('--num_factors', type=int, default=8,
                         help='Embedding size.')
-    parser.add_argument('--regs', nargs='?', default='[0,0]',
+    parser.add_argument('--regs', nargs='?', default=0,
                         help="Regularization for user and item embeddings.")
     parser.add_argument('--lr', type=float, default=0.001,
                         help='Learning rate.')
@@ -35,7 +35,7 @@ def parse_args():
 
 class GMF:
 
-    def __init__(self,num_users,num_items,latent_fetures = 8,regs=[0,0]):
+    def __init__(self,num_users,num_items,latent_fetures = 8,regs=0):
         self.num_users = num_users
         self.num_items = num_items
         self.latent_features = latent_fetures
@@ -44,8 +44,10 @@ class GMF:
         user_input = keras.layers.Input(shape=(1,),dtype = 'int32')
         item_input = keras.layers.Input(shape=(1,),dtype = 'int32')
         #embedding layer
-        user_embedding = keras.layers.Embedding(num_users,latent_fetures,embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(user_input)
-        item_embedding = keras.layers.Embedding(num_items,latent_fetures,embeddings_regularizer=keras.regularizers.l2(self.regs[1]))(item_input)
+        user_embedding = keras.layers.Embedding(num_users,latent_fetures,embeddings_regularizer=keras.regularizers.l2(self.regs),
+                                                name ='user_embedding')(user_input)
+        item_embedding = keras.layers.Embedding(num_items,latent_fetures,embeddings_regularizer=keras.regularizers.l2(self.regs),
+                                                name ='item_embedding')(item_input)
         user_latent = keras.layers.Flatten()(user_embedding)
         item_latent = keras.layers.Flatten()(item_embedding)
 
@@ -53,6 +55,7 @@ class GMF:
         concat = keras.layers.Multiply()([user_latent,item_latent])
 
         output = keras.layers.Dense(1,kernel_initializer=keras.initializers.lecun_uniform(),
+                                    name='output'
                                     )(concat)
 
         self.model = keras.Model(inputs = [user_input,item_input],
@@ -81,11 +84,11 @@ if __name__ =="__main__":
 
         #callbacks
         early_stop_cb = keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)
-        model_out_file = 'Pretrain/MLP_%s.h5' % (datetime.now().strftime('%Y-%m-%d-%h-%m-%s'))
+        model_out_file = 'Pretrain/GMF_%s.h5' % (datetime.now().strftime('%Y-%m-%d-%h-%m-%s'))
         model_check_cb = keras.callbacks.ModelCheckpoint(model_out_file, save_best_only=True)
 
         #model
-        model = GMF(loader.num_users,loader.num_movies,num_factors,regs).get_model()
+        model = GMF(loader.num_users,loader.num_items,num_factors,regs).get_model()
 
         if learner.lower() == "adagrad":
             model.compile(optimizer=keras.optimizers.Adagrad(lr=learning_rate), loss='mse')
@@ -114,6 +117,10 @@ if __name__ =="__main__":
 
         pd.DataFrame(history.history).plot(figsize= (8,5))
         plt.show()
+        test_sample = X_test[:10]
+        test_sample_label = test_labels[:10]
+        print(model.predict([test_sample[:, 0], test_sample[:, 1]]))
+        print(test_sample_label)
 
 
 
