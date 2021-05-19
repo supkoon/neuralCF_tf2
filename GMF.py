@@ -39,12 +39,13 @@ class GMF:
         self.num_users = num_users
         self.num_items = num_items
         self.latent_features = latent_fetures
+        self.regs = regs
         #inputs
         user_input = keras.layers.Input(shape=(1,),dtype = 'int32')
         item_input = keras.layers.Input(shape=(1,),dtype = 'int32')
         #embedding layer
-        user_embedding = keras.layers.Embedding(num_users,latent_fetures,embeddings_regularizer=keras.regularizers.l2(regs[0]))(user_input)
-        item_embedding = keras.layers.Embedding(num_items,latent_fetures,embeddings_regularizer=keras.regularizers.l2(regs[1]))(item_input)
+        user_embedding = keras.layers.Embedding(num_users,latent_fetures,embeddings_regularizer=keras.regularizers.l2(self.regs[0]))(user_input)
+        item_embedding = keras.layers.Embedding(num_items,latent_fetures,embeddings_regularizer=keras.regularizers.l2(self.regs[1]))(item_input)
         user_latent = keras.layers.Flatten()(user_embedding)
         item_latent = keras.layers.Flatten()(item_embedding)
 
@@ -65,7 +66,7 @@ if __name__ =="__main__":
         #argparse
         args = parse_args()
         num_factors = args.num_factors
-        regs = eval(args.regs)
+        regs = args.regs
         learner = args.learner
         learning_rate = args.lr
         epochs = args.epochs
@@ -80,11 +81,11 @@ if __name__ =="__main__":
 
         #callbacks
         early_stop_cb = keras.callbacks.EarlyStopping(patience=10, restore_best_weights=True)
-        model_out_file = 'Pretrain/GMF_%s.h5' % (datetime.now().strftime('%Y-%m-%d-%h-%m-%s'))
+        model_out_file = 'Pretrain/MLP_%s.h5' % (datetime.now().strftime('%Y-%m-%d-%h-%m-%s'))
         model_check_cb = keras.callbacks.ModelCheckpoint(model_out_file, save_best_only=True)
 
         #model
-        model = GMF(loader.num_users,loader.num_movies,num_factors).get_model()
+        model = GMF(loader.num_users,loader.num_movies,num_factors,regs).get_model()
 
         if learner.lower() == "adagrad":
             model.compile(optimizer=keras.optimizers.Adagrad(lr=learning_rate), loss='mse')
