@@ -137,7 +137,7 @@ def load_pretrain_model(model, gmf_model, mlp_model, num_layers,alpha):
 
 
     pretrain_weights = np.concatenate((alpha * gmf_output[0], (1-alpha)*mlp_output[0]), axis=0)
-    pretrain_bias = alpha * gmf_output[1] + (1-alpha)*alpha* mlp_output[1]
+    pretrain_bias = alpha * gmf_output[1] + (1-alpha)*mlp_output[1]
     model.get_layer('output').set_weights([pretrain_weights, pretrain_bias])
     return model
 
